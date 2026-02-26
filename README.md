@@ -1,4 +1,9 @@
 
+> **This is a fork of [ArroyoSystems/arroyo](https://github.com/ArroyoSystems/arroyo) maintained by the [ASAP project](https://github.com/ProjectASAP/asap).**
+> It adds Prometheus-native connectors (remote write ingest, impulse source) and a generic file source (CSV/JSON/Parquet), developed for sketch-based approximate analytics on Prometheus metrics.
+> Forked from upstream commit [`9ace5cac`](https://github.com/ArroyoSystems/arroyo/commit/9ace5cac81bb3f58c806c3120a249a1e1174155e).
+---
+
 <h1 align="center">
     <img src="https://raw.githubusercontent.com/ArroyoSystems/arroyo/760aabdbdb019d95f0c5ebb60933233aa735f830/images/arroyo_logo.png" width="400px" alt="Arroyo" />
 </h1>

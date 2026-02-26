@@ -113,11 +113,11 @@ jobs:
           mkdir -p /tmp/digests/arroyo-single
           digest="${{ steps.build-single.outputs.digest }}"
           touch "/tmp/digests/arroyo-single/${digest#sha256:}"
-          
+
           mkdir -p /tmp/digests/arroyo
           digest="${{ steps.build-arroyo.outputs.digest }}"
           touch "/tmp/digests/arroyo/${digest#sha256:}"
-          
+
           mkdir -p /tmp/digests/arroyo-full
           digest="${{ steps.build-arroyo-full.outputs.digest }}"
           touch "/tmp/digests/arroyo-full/${digest#sha256:}"
@@ -173,7 +173,7 @@ jobs:
       -
         name: Create manifest list and push
         working-directory: /tmp/digests/${{ matrix.image_name }}
-        run: |          
+        run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf 'ghcr.io/arroyosystems/${{ matrix.image_name }}@sha256:%s ' *)
       -

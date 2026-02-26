@@ -60,7 +60,7 @@ jobs:
           sudo ldconfig
 
       - name: Run DB migrations
-        run: |          
+        run: |
           cargo install --debug refinery_cli --version $REFINERY_VERSION
           refinery migrate -e REFINERY_CONFIG -p crates/arroyo-api/migrations
       - name: Run frontend build
