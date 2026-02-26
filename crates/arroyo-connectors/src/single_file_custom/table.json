@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "title": "SingleFileCustomTable",
+  "properties": {
+    "path": {
+      "type": "string",
+      "title": "Path",
+      "description": "Local file path"
+    },
+    "file_format": {
+      "type": "string",
+      "title": "File Format",
+      "enum": ["json", "parquet"]
+    },
+    "compression": {
+      "type": "string",
+      "title": "Compression",
+      "enum": ["none", "gzip", "zstd"]
+    },
+    "timestamp_field": {
+      "type": "string",
+      "title": "Timestamp Field",
+      "description": "Field name to extract event time from"
+    },
+    "ts_format": {
+      "type": "string",
+      "title": "TsFormat",
+      "enum": ["unix_millis", "unix_seconds", "rfc3339"]
+    },
+    "bad_data_mode": {
+      "type": "string",
+      "title": "BadDataMode",
+      "enum": ["skip", "fail"]
+    }
+  },
+  "required": ["path", "file_format", "timestamp_field"],
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+    "type": "object",
+    "title": "PrometheusRemoteWriteOptimizedTable",
+    "properties": {
+        "base_port": {
+            "title": "Base Port",
+            "type": "integer",
+            "description": "Starting port for parallel tasks (actual port = base_port + task_index)",
+            "examples": [
+                "9090",
+                "8080"
+            ],
+            "default": 9090,
+            "minimum": 1,
+            "maximum": 65535
+        },
+        "path": {
+            "title": "Path",
+            "type": "string",
+            "description": "HTTP path to listen on for remote_write requests",
+            "examples": [
+                "/receive",
+                "/api/v1/write"
+            ],
+            "default": "/receive"
+        },
+        "bind_address": {
+            "title": "Bind address",
+            "type": "string",
+            "description": "Address to bind the HTTP server to",
+            "examples": [
+                "0.0.0.0",
+                "127.0.0.1"
+            ],
+            "default": "0.0.0.0"
+        },
+        "metrics": {
+            "title": "Metrics",
+            "type": "array",
+            "description": "Array of metric configurations, each with metric name and labels. Union of all labels becomes output schema columns. Only metrics listed here will be emitted.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Metric name to filter for (e.g., 'cpu_usage')"
+                    },
+                    "labels": {
+                        "type": "array",
+                        "description": "List of label names for this metric",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["name", "labels"]
+            },
+            "examples": [
+                [
+                    {"name": "cpu_usage", "labels": ["instance", "job"]},
+                    {"name": "memory_usage", "labels": ["instance", "node"]},
+                    {"name": "disk_io", "labels": ["device", "instance"]}
+                ]
+            ]
+        }
+    },
+    "required": ["metrics"]
+}

@@ -539,7 +539,7 @@ impl ArrowOperator for SlidingAggregatingWindowFunc<SystemTime> {
         "sliding_window".to_string()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed("SlidingAggregatingWindowFunc"),
             fields: vec![

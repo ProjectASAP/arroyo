@@ -69,26 +69,59 @@ fn compute_assignments(
     program: &LogicalProgram,
 ) -> Vec<TaskAssignment> {
     let mut assignments = vec![];
+    
+    info!(
+        "COMPUTE_ASSIGNMENTS: {} workers, total_slots={}, total_nodes={}",
+        workers.len(),
+        workers.iter().map(|w| w.slots).sum::<usize>(),
+        program.graph.node_count()
+    );
+    
     for node in program.graph.node_weights() {
         let mut worker_idx = 0;
         let mut current_count = 0;
 
+        info!(
+            "ASSIGN_NODE: node_id={}, description='{}', parallelism={}",
+            node.node_id,
+            node.description,
+            node.parallelism
+        );
+
         for i in 0..node.parallelism {
-            assignments.push(TaskAssignment {
+            let assignment = TaskAssignment {
                 node_id: node.node_id,
                 subtask_idx: i as u32,
                 worker_id: workers[worker_idx].id.0,
                 worker_addr: workers[worker_idx].data_address.clone(),
-            });
+            };
+            
+            info!(
+                "TASK_ASSIGNMENT: node_id={}, subtask={}, worker_id={}, machine_id={}, slot_usage={}/{}",
+                assignment.node_id,
+                assignment.subtask_idx,
+                assignment.worker_id,
+                workers[worker_idx].machine_id.0,
+                current_count + 1,
+                workers[worker_idx].slots
+            );
+            
+            assignments.push(assignment);
             current_count += 1;
 
             if current_count == workers[worker_idx].slots {
+                info!(
+                    "WORKER_FULL: worker_id={}, machine_id={}, moving to next worker",
+                    workers[worker_idx].id.0,
+                    workers[worker_idx].machine_id.0
+                );
                 worker_idx += 1;
                 current_count = 0;
             }
         }
     }
 
+    info!("ASSIGNMENTS_COMPLETE: {} total tasks assigned", assignments.len());
     assignments
 }
 

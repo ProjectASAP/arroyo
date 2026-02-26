@@ -113,7 +113,7 @@ impl ArrowOperator for AsyncUdfOperator {
         self.name.clone()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed("AsyncUdfOperator"),
             fields: vec![

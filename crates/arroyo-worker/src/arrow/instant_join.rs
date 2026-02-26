@@ -193,7 +193,7 @@ impl ArrowOperator for InstantJoin {
         "InstantJoin".to_string()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed("InstantJoin"),
             fields: vec![("join_execution_plan", self.join_exec.as_ref().into())],

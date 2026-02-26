@@ -775,7 +775,7 @@ impl ArrowOperator for SessionAggregatingWindowFunc {
         "session_window".to_string()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed("SessionAggregatingWindowFunc"),
             fields: vec![

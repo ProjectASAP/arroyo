@@ -97,7 +97,7 @@ impl ArrowOperator for WatermarkGenerator {
         "expression_watermark_generator".to_string()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed("WatermarkGenerator"),
             fields: vec![

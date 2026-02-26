@@ -1,0 +1,14 @@
+// Extensions for protocol buffers to achieve better performance
+syntax = "proto2";
+
+package gogoproto;
+
+import "google/protobuf/descriptor.proto";
+
+option java_package = "com.google.protobuf";
+option java_outer_classname = "GoGoProtos";
+option go_package = "github.com/gogo/protobuf/gogoproto";
+
+extend google.protobuf.FieldOptions {
+  optional bool nullable = 65001;
+}

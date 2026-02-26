@@ -74,7 +74,7 @@ impl ArrowOperator for ValueExecutionOperator {
         self.name.clone()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: (&self.name).into(),
             fields: vec![("plan", (&*self.executor.plan).into())],
@@ -201,7 +201,7 @@ impl ArrowOperator for KeyExecutionOperator {
         self.name.clone()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: Cow::Borrowed(&self.name),
             fields: vec![

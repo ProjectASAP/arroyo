@@ -905,7 +905,7 @@ impl ArrowOperator for IncrementalAggregatingFunc {
         "UpdatingAggregatingFunc".to_string()
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         let aggregates = self
             .aggregates
             .iter()

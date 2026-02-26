@@ -1,0 +1,90 @@
+{
+    "type": "object",
+    "title": "PrometheusImpulseTable",
+    "properties": {
+        "event_rate": {
+            "title": "Event rate (messages / sec)",
+            "type": "number",
+            "description": "The number of messages the prometheus impulse source will emit per second",
+            "examples": [
+                "100"
+            ],
+            "minimum": 0
+        },
+        "event_time_interval": {
+            "title": "Event time interval (µs)",
+            "type": "integer",
+            "description": "The number of microseconds in between the event times of subsequent events emmitted by the source; if not set wall-clock time is used"
+        },
+        "message_count": {
+            "title": "Message count",
+            "type": "integer",
+            "description": "The number of messages the prometheus impulse source will emit before stopping; if not set the source will run forever"
+        },
+        "metric_name": {
+            "title": "Metric name",
+            "type": "string",
+            "description": "The name of the Prometheus metric to generate",
+            "examples": [
+                "cpu_usage",
+                "memory_usage",
+                "request_count"
+            ],
+            "default": "fake_metric"
+        },
+        "metric_type": {
+            "title": "Metric type",
+            "type": "string",
+            "enum": [
+                "gauge",
+                "counter"
+            ],
+            "description": "The type of Prometheus metric (gauge or counter)",
+            "default": "gauge"
+        },
+        "value_scale": {
+            "title": "Value scale",
+            "type": "number",
+            "description": "Maximum value for generated metric values",
+            "examples": [
+                "100.0",
+                "1000.0"
+            ],
+            "default": 100.0,
+            "minimum": 0
+        },
+        "distribution": {
+            "title": "Distribution type",
+            "type": "string",
+            "enum": [
+                "uniform"
+            ],
+            "description": "Distribution for generating metric values (only uniform supported)",
+            "default": "uniform"
+        },
+        "num_labels": {
+            "title": "Number of labels",
+            "type": "integer",
+            "description": "Number of labels to generate for each metric",
+            "examples": [
+                "2",
+                "5"
+            ],
+            "default": 2,
+            "minimum": 0
+        },
+        "cardinality_per_label": {
+            "title": "Cardinality per label",
+            "type": "string",
+            "description": "Comma-separated list of cardinality values for each label. If single value, applies to all labels.",
+            "examples": [
+                "3",
+                "2,5,3"
+            ],
+            "default": "3"
+        }
+    },
+    "required": [
+        "event_rate"
+    ]
+}

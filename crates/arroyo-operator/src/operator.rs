@@ -87,7 +87,7 @@ impl ConstructedOperator {
         }
     }
 
-    pub fn display(&self) -> DisplayableOperator {
+    pub fn display(&self) -> DisplayableOperator<'_> {
         match self {
             Self::Source(_) => DisplayableOperator {
                 name: self.name().into(),
@@ -230,10 +230,14 @@ impl OperatorNode {
         ready: Arc<Barrier>,
     ) {
         info!(
-            "Starting node {}-{} ({})",
+            "TASK_EXECUTION_START: node_id={}, task_index={}, name='{}', chain_operators={}",
             self.node_id(),
             self.task_index(),
-            self.name()
+            self.name(),
+            match self.as_ref() {
+                OperatorNode::Source(_) => 1,
+                OperatorNode::Chained(c) => c.iter().count(),
+            }
         );
 
         let chain_info = Arc::new(ChainInfo {
@@ -256,7 +260,7 @@ impl OperatorNode {
         .await;
 
         info!(
-            "Task finished {}-{} ({})",
+            "TASK_EXECUTION_END: node_id={}, task_index={}, name='{}'",
             chain_info.node_id, chain_info.task_index, chain_info.description
         );
 
@@ -531,13 +535,13 @@ impl ChainedOperator {
         false
     }
 
-    pub fn iter(&self) -> ChainIterator {
+    pub fn iter(&self) -> ChainIterator<'_> {
         ChainIterator {
             current: Some(self),
         }
     }
 
-    pub fn iter_mut(&mut self) -> ChainIteratorMut {
+    pub fn iter_mut(&mut self) -> ChainIteratorMut<'_> {
         ChainIteratorMut {
             current: Some(self),
         }
@@ -1086,7 +1090,7 @@ pub trait ArrowOperator: Send + 'static {
         None
     }
 
-    fn display(&self) -> DisplayableOperator {
+    fn display(&self) -> DisplayableOperator<'_> {
         DisplayableOperator {
             name: self.name().into(),
             fields: vec![],

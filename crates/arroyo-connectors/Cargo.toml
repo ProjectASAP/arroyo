@@ -90,5 +90,13 @@ rustls = "0.22"
 async-nats = "0.38.0"
 nkeys = "0.3.0"
 
+# Prometheus remote_write
+snap = "1.1.0"
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+tokio-util = { version = "0.7", features = ["codec"] }
+
 [build-dependencies]
 glob = "0.3"
+tonic-build = { workspace = true }

@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  arroyo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: arroyo-full
+      args:
+        - PROFILE=release
+        - FEATURES=python
+    container_name: sketchdb-arroyo
+    network_mode: host
+    volumes:
+      - ../../ArroyoSketch/config.yaml:/config.yaml
+    command: ["--config", "/config.yaml", "cluster"]
+    environment:
+      - ARROYO__API__RUN_HTTP_PORT=5115
+    restart: no

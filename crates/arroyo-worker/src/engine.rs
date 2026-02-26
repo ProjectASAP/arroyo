@@ -727,7 +727,29 @@ impl Engine {
         let operator = Box::new(node.node);
         let join_task = {
             let control_tx = control_tx.clone();
+            let task_info_clone = task_info.clone();
+            
+            info!(
+                "THREAD_SPAWN: worker_id={}, node_id={}, subtask={}, operator='{}', parallelism={}/{}",
+                self.worker_id.0,
+                task_info.node_id,
+                task_info.task_index,
+                task_info.operator_name,
+                node.subtask_idx + 1,
+                node.parallelism
+            );
+            
             tokio::spawn(async move {
+                info!(
+                    "THREAD_START: task={}-{}, operator='{}', worker_id={}, pid={}, tid={:?}",
+                    task_info_clone.node_id,
+                    task_info_clone.task_index,
+                    task_info_clone.operator_name,
+                    task_info_clone.job_id,
+                    std::process::id(),
+                    std::thread::current().id()
+                );
+                
                 operator
                     .start(
                         control_tx.clone(),
@@ -738,6 +760,13 @@ impl Engine {
                         ready,
                     )
                     .await;
+                    
+                info!(
+                    "THREAD_END: task={}-{}, operator='{}'",
+                    task_info_clone.node_id,
+                    task_info_clone.task_index,
+                    task_info_clone.operator_name
+                );
             })
         };
 

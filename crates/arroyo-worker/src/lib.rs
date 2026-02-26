@@ -271,6 +271,17 @@ impl WorkerServer {
         // ideally, get a signal when the server is started...
         tokio::time::sleep(Duration::from_millis(50)).await;
 
+        info!(
+            "WORKER_REGISTER: worker_id={}, machine_id={}, job_id={}, available_parallelism={}, configured_slots={}, rpc_addr={}, data_addr={}",
+            id.0,
+            machine_id.to_string(),
+            job_id,
+            std::thread::available_parallelism().unwrap().get(),
+            config.worker.task_slots,
+            rpc_address,
+            data_address
+        );
+
         client
             .register_worker(Request::new(RegisterWorkerReq {
                 worker_info: Some(WorkerInfo {
@@ -288,6 +299,13 @@ impl WorkerServer {
             }))
             .await
             .unwrap();
+            
+        info!(
+            "WORKER_REGISTERED: worker_id={}, machine_id={}, slots={}",
+            id.0,
+            machine_id.to_string(),
+            config.worker.task_slots
+        );
 
         Ok(())
     }

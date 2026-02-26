@@ -1,0 +1,110 @@
+{
+    "name": "prometheus_optimized_source",
+    "connector": "prometheus_remote_write_optimized",
+    "tableType": "source",
+    "config": {
+        "base_port": 8080,
+        "path": "/receive",
+        "bind_address": "0.0.0.0",
+        "label_names": ["instance", "job", "label1", "label2", "label3"]
+    },
+    "schema": {
+        "format": null,
+        "badData": null,
+        "framing": null,
+        "structName": "PrometheusMetric",
+        "fields": [
+            {
+                "fieldName": "metric_name",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": false,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "timestamp",
+                "fieldType": {
+                    "type": {
+                        "primitive": "UnixMillis"
+                    },
+                    "sqlName": "TIMESTAMP"
+                },
+                "nullable": false,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "value",
+                "fieldType": {
+                    "type": {
+                        "primitive": "F64"
+                    },
+                    "sqlName": "DOUBLE"
+                },
+                "nullable": false,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "instance",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": true,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "job",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": true,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "label1",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": true,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "label2",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": true,
+                "metadataKey": null
+            },
+            {
+                "fieldName": "label3",
+                "fieldType": {
+                    "type": {
+                        "primitive": "String"
+                    },
+                    "sqlName": "TEXT"
+                },
+                "nullable": true,
+                "metadataKey": null
+            }
+        ],
+        "definition": null,
+        "inferred": null,
+        "primaryKeys": []
+    }
+}

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM rust:1-bookworm AS builder
+FROM rust:1-bookworm@sha256:948f9b08a66e7fe01b03a98ef1c7568292e07ec2e4fe90d88c07bb14563c84ff AS builder
 WORKDIR /app
 ARG GIT_SHA
 ARG TARGETPLATFORM
@@ -81,7 +81,8 @@ CMD ["cluster"]
 FROM rust:slim-bookworm AS arroyo-full
 WORKDIR /app
 RUN apt-get update && \
-    apt-get -y install libsasl2-2 ca-certificates curl pkg-config
+    apt-get -y install libsasl2-2 ca-certificates curl pkg-config \
+    build-essential g++
 
 ENV ARROYO__API__RUN_HTTP_PORT=5115
 
@@ -89,6 +90,8 @@ COPY --from=builder /arroyo ./
 COPY --from=builder /usr/local/bin/protoc /usr/local/bin/protoc
 COPY --from=builder /app/include/google /usr/local/include/google
 COPY --from=builder /app/python /python
+COPY --from=builder /app/Cargo.toml /app/Cargo.toml
+COPY --from=builder /app/crates/arroyo-udf /app/crates/arroyo-udf
 
 RUN cp -r /python/bin/* /usr/local/bin/ && \
     cp -r /python/include/* /usr/local/include/ && \

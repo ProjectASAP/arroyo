@@ -1,0 +1,51 @@
+{
+    "type": "object",
+    "title": "PrometheusRemoteWriteTable",
+    "properties": {
+        "base_port": {
+            "title": "Base Port",
+            "type": "integer",
+            "description": "Starting port for parallel tasks (actual port = base_port + task_index)",
+            "examples": [
+                "9090",
+                "8080"
+            ],
+            "default": 9090,
+            "minimum": 1,
+            "maximum": 65535
+        },
+        "parallelism": {
+            "title": "Parallelism",
+            "type": "integer",
+            "description": "Number of parallel tasks (ports will be base_port + task_id)",
+            "examples": [
+                "1",
+                "4"
+            ],
+            "default": 1,
+            "minimum": 1,
+            "maximum": 64
+        },
+        "path": {
+            "title": "Path",
+            "type": "string",
+            "description": "HTTP path to listen on for remote_write requests",
+            "examples": [
+                "/receive",
+                "/api/v1/write"
+            ],
+            "default": "/receive"
+        },
+        "bind_address": {
+            "title": "Bind address",
+            "type": "string",
+            "description": "Address to bind the HTTP server to",
+            "examples": [
+                "0.0.0.0",
+                "127.0.0.1"
+            ],
+            "default": "0.0.0.0"
+        }
+    },
+    "required": []
+}
