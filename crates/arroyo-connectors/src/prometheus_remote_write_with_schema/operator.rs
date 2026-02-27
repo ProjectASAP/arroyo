@@ -412,7 +412,7 @@ impl PrometheusRemoteWriteWithSchemaSourceFunc {
                             // Convert each metric to JSON and deserialize like Kafka
                             debug!("Processing batch of {} metrics", metrics.len());
                             for (i, metric) in metrics.iter().enumerate() {
-                                match self.metric_to_json(&metric) {
+                                match self.metric_to_json(metric) {
                                     Ok(json_str) => {
                                         // Debug: Log JSON before deserialization
                                         debug!("Deserializing metric {}/{}: {}", i+1, metrics.len(), json_str);

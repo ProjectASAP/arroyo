@@ -91,7 +91,7 @@ impl Connector for PrometheusRemoteWriteWithSchemaConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -208,7 +208,7 @@ impl PrometheusRemoteWriteWithSchemaConnector {
         // Test if we can bind to all ports in the range
         for i in 0..parallelism {
             let port = base_port + i as u16;
-            let addr = format!("{}:{}", bind_address, port);
+            let addr = format!("{bind_address}:{port}");
             tokio::net::TcpListener::bind(&addr)
                 .await
                 .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;

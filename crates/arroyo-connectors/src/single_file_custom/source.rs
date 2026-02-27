@@ -41,6 +41,7 @@ pub struct SingleFileCustomSourceFunc {
 }
 
 impl SingleFileCustomSourceFunc {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         path: String,
         file_format: FileFormat,
@@ -70,7 +71,7 @@ impl SingleFileCustomSourceFunc {
                 let millis: i64 = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as unix_millis: {}", value, e),
+                        format!("Failed to parse '{value}' as unix_millis: {e}"),
                     )
                 })?;
                 Ok(UNIX_EPOCH + Duration::from_millis(millis as u64))
@@ -79,7 +80,7 @@ impl SingleFileCustomSourceFunc {
                 let secs: i64 = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as unix_seconds: {}", value, e),
+                        format!("Failed to parse '{value}' as unix_seconds: {e}"),
                     )
                 })?;
                 Ok(UNIX_EPOCH + Duration::from_secs(secs as u64))
@@ -88,7 +89,7 @@ impl SingleFileCustomSourceFunc {
                 let dt: DateTime<Utc> = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as RFC3339: {}", value, e),
+                        format!("Failed to parse '{value}' as RFC3339: {e}"),
                     )
                 })?;
                 Ok(dt.into())
@@ -343,9 +344,8 @@ impl SingleFileCustomSourceFunc {
                     return Err(UserError::new(
                         "unsupported timestamp type",
                         format!(
-                            "Timestamp field has type {:?}. Supported: Int64, Timestamp types",
-                            data_type
-                        ),
+                        "Timestamp field has type {data_type:?}. Supported: Int64, Timestamp types"
+                    ),
                     ))
                 }
             };
@@ -372,7 +372,7 @@ impl SingleFileCustomSourceFunc {
         RecordBatch::try_new(output_schema, columns).map_err(|e| {
             UserError::new(
                 "failed to create output batch",
-                format!("Schema mismatch: {}", e),
+                format!("Schema mismatch: {e}"),
             )
         })
     }

@@ -107,7 +107,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -146,10 +146,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
         let path = table.path.as_deref().unwrap_or("/receive");
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
-        let description = format!(
-            "PrometheusRemoteWriteSchemaless<{}:{}{}>",
-            bind_address, port, path
-        );
+        let description = format!("PrometheusRemoteWriteSchemaless<{bind_address}:{port}{path}>");
 
         let config = OperatorConfig {
             connection: serde_json::to_value(config).unwrap(),
@@ -194,7 +191,7 @@ impl PrometheusRemoteWriteSchemalessConnector {
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
         // Test if we can bind to the address and port
-        let addr = format!("{}:{}", bind_address, port);
+        let addr = format!("{bind_address}:{port}");
         tokio::net::TcpListener::bind(&addr)
             .await
             .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;

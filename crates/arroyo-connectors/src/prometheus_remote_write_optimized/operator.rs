@@ -6,7 +6,6 @@ use arrow::array::{
     ArrayRef, Float64Array, RecordBatch, StringArray, TimestampMillisecondArray,
     TimestampNanosecondArray,
 };
-use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use async_trait::async_trait;
 use bincode::{Decode, Encode};
 use bytes::Bytes;
@@ -47,9 +46,6 @@ pub struct PrometheusRemoteWriteOptimizedSourceFunc {
 
     // Metrics to filter for (only emit these metrics)
     metric_filter: HashSet<String>,
-
-    // Map from metric name to its specific labels (for debugging/validation)
-    metric_label_map: HashMap<String, Vec<String>>,
 }
 
 impl PrometheusRemoteWriteOptimizedSourceFunc {
@@ -59,7 +55,6 @@ impl PrometheusRemoteWriteOptimizedSourceFunc {
         path: String,
         all_labels: Vec<String>,
         metric_filter: HashSet<String>,
-        metric_label_map: HashMap<String, Vec<String>>,
     ) -> Self {
         Self {
             bind_address,
@@ -68,33 +63,7 @@ impl PrometheusRemoteWriteOptimizedSourceFunc {
             state: PrometheusRemoteWriteOptimizedState::default(),
             all_labels,
             metric_filter,
-            metric_label_map,
         }
-    }
-
-    pub fn create_schema(label_names: &[String]) -> Arc<Schema> {
-        let mut fields = vec![
-            Field::new("metric_name", DataType::Utf8, false),
-            Field::new(
-                "timestamp",
-                DataType::Timestamp(TimeUnit::Millisecond, None),
-                false,
-            ),
-            Field::new("value", DataType::Float64, false),
-        ];
-
-        // Add one column per label
-        for label_name in label_names {
-            fields.push(Field::new(label_name, DataType::Utf8, true));
-        }
-
-        fields.push(Field::new(
-            "_timestamp",
-            DataType::Timestamp(TimeUnit::Nanosecond, None),
-            false,
-        ));
-
-        Arc::new(Schema::new(fields))
     }
 
     async fn handle_request(

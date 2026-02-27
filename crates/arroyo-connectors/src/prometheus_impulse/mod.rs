@@ -74,10 +74,7 @@ fn compute_label_combinations(num_labels: usize, cardinality_per_label: &str) ->
                 }
                 cards
             }
-            Err(_) => panic!(
-                "Failed to parse cardinality_per_label: {}",
-                cardinality_per_label
-            ),
+            Err(_) => panic!("Failed to parse cardinality_per_label: {cardinality_per_label}"),
         }
     } else {
         let single_card: usize = cardinality_per_label
@@ -88,11 +85,10 @@ fn compute_label_combinations(num_labels: usize, cardinality_per_label: &str) ->
 
     // Generate label values for each label
     let mut label_values = Vec::with_capacity(num_labels);
-    for label_idx in 0..num_labels {
-        let cardinality = cardinalities[label_idx];
+    for (label_idx, &cardinality) in cardinalities.iter().enumerate().take(num_labels) {
         let mut values = Vec::with_capacity(cardinality);
         for value_idx in 0..cardinality {
-            values.push(format!("value_{}_value_{}", label_idx, value_idx));
+            values.push(format!("value_{label_idx}_value_{value_idx}"));
         }
         label_values.push(values);
     }
@@ -121,7 +117,7 @@ fn compute_label_combinations(num_labels: usize, cardinality_per_label: &str) ->
                 combo
                     .iter()
                     .enumerate()
-                    .map(|(i, value)| format!("label_{}={}", i, value))
+                    .map(|(i, value)| format!("label_{i}={value}"))
                     .collect::<Vec<_>>()
                     .join(",")
             }

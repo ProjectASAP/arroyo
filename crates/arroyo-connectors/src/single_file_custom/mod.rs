@@ -68,7 +68,7 @@ impl Connector for SingleFileCustomConnector {
                 let message = TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("File not found: {}", path),
+                    message: format!("File not found: {path}"),
                 };
                 let _ = tx.send(message).await;
                 return;
@@ -83,10 +83,7 @@ impl Connector for SingleFileCustomConnector {
                     let message = TestSourceMessage {
                         error: true,
                         done: true,
-                        message: format!(
-                            "Timestamp field '{}' not found in schema",
-                            timestamp_field
-                        ),
+                        message: format!("Timestamp field '{timestamp_field}' not found in schema"),
                     };
                     let _ = tx.send(message).await;
                     return;

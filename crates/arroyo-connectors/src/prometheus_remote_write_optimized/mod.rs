@@ -1,6 +1,6 @@
 mod operator;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use crate::{source_field, EmptyConfig};
 use anyhow::anyhow;
@@ -55,18 +55,6 @@ impl PrometheusRemoteWriteOptimizedConnector {
         use std::collections::HashSet;
 
         config.metrics.iter().map(|m| m.name.clone()).collect()
-    }
-
-    fn get_metric_label_map(
-        config: &PrometheusRemoteWriteOptimizedTable,
-    ) -> HashMap<String, Vec<String>> {
-        use std::collections::HashMap;
-
-        config
-            .metrics
-            .iter()
-            .map(|m| (m.name.clone(), m.labels.clone()))
-            .collect()
     }
 
     fn prometheus_schema(label_names: &[String]) -> ConnectionSchema {
@@ -180,7 +168,7 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -284,7 +272,6 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
     ) -> anyhow::Result<ConstructedOperator> {
         let all_labels = Self::collect_all_labels(&table);
         let metric_filter = Self::get_metric_filter(&table);
-        let metric_label_map = Self::get_metric_label_map(&table);
 
         let port = table.base_port.unwrap_or(9090);
         let path = table.path.unwrap_or_else(|| "/receive".to_string());
@@ -297,7 +284,6 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
                 path,
                 all_labels,
                 metric_filter,
-                metric_label_map,
             ),
         )))
     }
@@ -309,7 +295,7 @@ impl PrometheusRemoteWriteOptimizedConnector {
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
         // Test if we can bind to the address and port
-        let addr = format!("{}:{}", bind_address, port);
+        let addr = format!("{bind_address}:{port}");
         tokio::net::TcpListener::bind(&addr)
             .await
             .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;
