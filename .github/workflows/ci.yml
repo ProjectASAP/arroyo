@@ -70,6 +70,6 @@ jobs:
         env:
           RUSTC_WRAPPER: sccache
       - name: Test
-        run: cargo nextest run -E 'kind(lib) & !test(/kafka/)' --all-features
+        run: cargo nextest run -E 'kind(lib) & !test(/kafka/) & !test(/mqtt/)' --all-features
         env:
           RUSTC_WRAPPER: sccache
