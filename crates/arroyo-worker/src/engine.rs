@@ -728,7 +728,7 @@ impl Engine {
         let join_task = {
             let control_tx = control_tx.clone();
             let task_info_clone = task_info.clone();
-            
+
             info!(
                 "THREAD_SPAWN: worker_id={}, node_id={}, subtask={}, operator='{}', parallelism={}/{}",
                 self.worker_id.0,
@@ -738,7 +738,7 @@ impl Engine {
                 node.subtask_idx + 1,
                 node.parallelism
             );
-            
+
             tokio::spawn(async move {
                 info!(
                     "THREAD_START: task={}-{}, operator='{}', worker_id={}, pid={}, tid={:?}",
@@ -749,7 +749,7 @@ impl Engine {
                     std::process::id(),
                     std::thread::current().id()
                 );
-                
+
                 operator
                     .start(
                         control_tx.clone(),
@@ -760,7 +760,7 @@ impl Engine {
                         ready,
                     )
                     .await;
-                    
+
                 info!(
                     "THREAD_END: task={}-{}, operator='{}'",
                     task_info_clone.node_id,

@@ -2,18 +2,18 @@ mod operator;
 
 use std::collections::{HashMap, HashSet};
 
+use crate::{source_field, EmptyConfig};
 use anyhow::anyhow;
 use arroyo_operator::connector::{Connection, Connector};
 use arroyo_operator::operator::ConstructedOperator;
 use arroyo_rpc::api_types::connections::{
-    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive,
-    PrimitiveType, TestSourceMessage,
+    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive, PrimitiveType,
+    TestSourceMessage,
 };
 use arroyo_rpc::{ConnectorOptions, OperatorConfig};
+use operator::PrometheusRemoteWriteOptimizedSourceFunc;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
-use crate::{source_field, EmptyConfig};
-use operator::PrometheusRemoteWriteOptimizedSourceFunc;
 
 const TABLE_SCHEMA: &str = include_str!("./table.json");
 const ICON: &str = include_str!("./prometheus_remote_write.svg");
@@ -51,9 +51,7 @@ impl PrometheusRemoteWriteOptimizedConnector {
         all_labels.into_iter().collect()
     }
 
-    fn get_metric_filter(
-        config: &PrometheusRemoteWriteOptimizedTable,
-    ) -> HashSet<String> {
+    fn get_metric_filter(config: &PrometheusRemoteWriteOptimizedTable) -> HashSet<String> {
         use std::collections::HashSet;
 
         config.metrics.iter().map(|m| m.name.clone()).collect()
@@ -290,9 +288,7 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
 
         let port = table.base_port.unwrap_or(9090);
         let path = table.path.unwrap_or_else(|| "/receive".to_string());
-        let bind_address = table
-            .bind_address
-            .unwrap_or_else(|| "0.0.0.0".to_string());
+        let bind_address = table.bind_address.unwrap_or_else(|| "0.0.0.0".to_string());
 
         Ok(ConstructedOperator::from_source(Box::new(
             PrometheusRemoteWriteOptimizedSourceFunc::new(
@@ -308,9 +304,7 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
 }
 
 impl PrometheusRemoteWriteOptimizedConnector {
-    async fn test_connection(
-        table: &PrometheusRemoteWriteOptimizedTable,
-    ) -> anyhow::Result<()> {
+    async fn test_connection(table: &PrometheusRemoteWriteOptimizedTable) -> anyhow::Result<()> {
         let port = table.base_port.unwrap_or(9090);
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 

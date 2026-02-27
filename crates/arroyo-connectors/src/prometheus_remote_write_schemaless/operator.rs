@@ -3,17 +3,19 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use arrow::array::{Float64Array, RecordBatch, StringArray, TimestampMillisecondArray, TimestampNanosecondArray};
+use arrow::array::{
+    Float64Array, RecordBatch, StringArray, TimestampMillisecondArray, TimestampNanosecondArray,
+};
 use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use async_trait::async_trait;
 use bincode::{Decode, Encode};
+use bytes::Bytes;
+use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
-use http_body_util::{BodyExt, Full};
-use bytes::Bytes;
 use prost::Message;
 use serde_json;
 use tokio::net::{TcpListener, TcpStream};
@@ -25,7 +27,7 @@ use arroyo_operator::operator::SourceOperator;
 use arroyo_operator::SourceFinishType;
 use arroyo_rpc::grpc::rpc::{StopMode, TableConfig};
 use arroyo_state::tables::global_keyed_map::GlobalKeyedView;
-use arroyo_types::{SignalMessage, to_nanos};
+use arroyo_types::{to_nanos, SignalMessage};
 
 // Include generated protobuf code
 include!(concat!(env!("OUT_DIR"), "/prometheus_proto.rs"));
@@ -188,9 +190,8 @@ impl PrometheusRemoteWriteSchemalessSourceFunc {
         let io = TokioIo::new(stream);
         let path_clone = path.clone();
 
-        let service = service_fn(move |req| {
-            Self::handle_request(req, tx.clone(), path_clone.clone())
-        });
+        let service =
+            service_fn(move |req| Self::handle_request(req, tx.clone(), path_clone.clone()));
 
         if let Err(err) = http1::Builder::new().serve_connection(io, service).await {
             error!("Error serving HTTP connection: {:?}", err);
@@ -347,7 +348,7 @@ impl PrometheusRemoteWriteSchemalessSourceFunc {
                             let timestamps: Vec<i64> = metrics.iter().map(|m| m.timestamp).collect(); // Prometheus timestamps are already in ms
                             let values: Vec<f64> = metrics.iter().map(|m| m.value).collect();
                             let labels: Vec<String> = metrics.iter().map(|m| m.labels.clone()).collect();
-                            
+
                             // Create _timestamp field with current system time in nanoseconds
                             let now = SystemTime::now();
                             let event_timestamps: Vec<i64> = vec![to_nanos(now) as i64; len];

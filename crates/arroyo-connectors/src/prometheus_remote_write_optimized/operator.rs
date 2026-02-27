@@ -2,17 +2,20 @@ use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, Float64Array, RecordBatch, StringArray, TimestampMillisecondArray, TimestampNanosecondArray};
+use arrow::array::{
+    ArrayRef, Float64Array, RecordBatch, StringArray, TimestampMillisecondArray,
+    TimestampNanosecondArray,
+};
 use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use async_trait::async_trait;
 use bincode::{Decode, Encode};
+use bytes::Bytes;
+use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
 use hyper_util::rt::TokioIo;
-use http_body_util::{BodyExt, Full};
-use bytes::Bytes;
 use prost::Message;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
@@ -182,9 +185,8 @@ impl PrometheusRemoteWriteOptimizedSourceFunc {
         let io = TokioIo::new(stream);
         let path_clone = path.clone();
 
-        let service = service_fn(move |req| {
-            Self::handle_request(req, tx.clone(), path_clone.clone())
-        });
+        let service =
+            service_fn(move |req| Self::handle_request(req, tx.clone(), path_clone.clone()));
 
         if let Err(err) = http1::Builder::new().serve_connection(io, service).await {
             error!("Error serving HTTP connection: {:?}", err);

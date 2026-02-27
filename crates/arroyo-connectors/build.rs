@@ -10,10 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
     // Build Prometheus protobuf definitions
-    let proto_files = &[
-        "proto/types.proto",
-        "proto/remote.proto",
-    ];
+    let proto_files = &["proto/types.proto", "proto/remote.proto"];
 
     // Configure the output directory
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());

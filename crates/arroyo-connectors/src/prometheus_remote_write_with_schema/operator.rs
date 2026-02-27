@@ -242,12 +242,16 @@ impl PrometheusRemoteWriteWithSchemaSourceFunc {
 
         // Warn about problematic values
         if metric.value.is_nan() {
-            warn!("Metric '{}' has NaN value! timestamp={}, labels={:?}",
-                  metric.metric_name, metric.timestamp, metric.labels);
+            warn!(
+                "Metric '{}' has NaN value! timestamp={}, labels={:?}",
+                metric.metric_name, metric.timestamp, metric.labels
+            );
         }
         if metric.value.is_infinite() {
-            warn!("Metric '{}' has infinite value: {} timestamp={}, labels={:?}",
-                  metric.metric_name, metric.value, metric.timestamp, metric.labels);
+            warn!(
+                "Metric '{}' has infinite value: {} timestamp={}, labels={:?}",
+                metric.metric_name, metric.value, metric.timestamp, metric.labels
+            );
         }
 
         let json_value = serde_json::json!({
@@ -266,7 +270,10 @@ impl PrometheusRemoteWriteWithSchemaSourceFunc {
         // Check if NaN was serialized as null in the JSON (this causes deserialization errors!)
         if metric.value.is_nan() && json_str.contains("\"value\":null") {
             error!("CRITICAL: NaN value was serialized as null in JSON! This will cause deserialization to fail.");
-            error!("Metric: {}, timestamp: {}, labels: {:?}", metric.metric_name, metric.timestamp, metric.labels);
+            error!(
+                "Metric: {}, timestamp: {}, labels: {:?}",
+                metric.metric_name, metric.timestamp, metric.labels
+            );
             error!("JSON contains: {}", json_str);
         }
 
@@ -337,12 +344,19 @@ impl PrometheusRemoteWriteWithSchemaSourceFunc {
         );
 
         // Debug: Log schema information from out_schema
-        debug!("Prometheus source initialized with schema: {:?}", collector.out_schema.schema);
+        debug!(
+            "Prometheus source initialized with schema: {:?}",
+            collector.out_schema.schema
+        );
 
         // Check if labels field is structured
         if let Ok(labels_field) = collector.out_schema.schema.field_with_name("labels") {
-            debug!("Labels field definition: name={}, type={:?}, nullable={}",
-                   labels_field.name(), labels_field.data_type(), labels_field.is_nullable());
+            debug!(
+                "Labels field definition: name={}, type={:?}, nullable={}",
+                labels_field.name(),
+                labels_field.data_type(),
+                labels_field.is_nullable()
+            );
         } else {
             debug!("No 'labels' field found in schema");
         }

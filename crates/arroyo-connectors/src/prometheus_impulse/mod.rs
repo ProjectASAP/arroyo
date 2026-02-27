@@ -1,7 +1,6 @@
 mod operator;
 
 use anyhow::bail;
-use std::sync::Arc;
 use arroyo_operator::connector::{Connection, Connector};
 use arroyo_operator::operator::ConstructedOperator;
 use arroyo_rpc::api_types::connections::FieldType::Primitive;
@@ -10,9 +9,12 @@ use arroyo_rpc::api_types::connections::{
 };
 use arroyo_rpc::{ConnectorOptions, OperatorConfig};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime};
+use std::sync::Arc;
+use std::time::SystemTime;
 
-use crate::prometheus_impulse::operator::{PrometheusImpulseSourceFunc, ImpulseSpec, PrometheusSpec};
+use crate::prometheus_impulse::operator::{
+    ImpulseSpec, PrometheusImpulseSourceFunc, PrometheusSpec,
+};
 use crate::{source_field, ConnectionType, EmptyConfig};
 
 const TABLE_SCHEMA: &str = include_str!("./table.json");
@@ -50,10 +52,7 @@ pub fn prometheus_impulse_schema() -> ConnectionSchema {
     }
 }
 
-fn compute_label_combinations(
-    num_labels: usize,
-    cardinality_per_label: &str,
-) -> Vec<String> {
+fn compute_label_combinations(num_labels: usize, cardinality_per_label: &str) -> Vec<String> {
     if num_labels == 0 {
         return vec!["".to_string()];
     }
@@ -75,7 +74,10 @@ fn compute_label_combinations(
                 }
                 cards
             }
-            Err(_) => panic!("Failed to parse cardinality_per_label: {}", cardinality_per_label),
+            Err(_) => panic!(
+                "Failed to parse cardinality_per_label: {}",
+                cardinality_per_label
+            ),
         }
     } else {
         let single_card: usize = cardinality_per_label
@@ -142,7 +144,8 @@ impl Connector for PrometheusImpulseConnector {
             id: "prometheus_impulse".to_string(),
             name: "Prometheus Impulse".to_string(),
             icon: ICON.to_string(),
-            description: "Generates Prometheus metrics with configurable labels and cardinality".to_string(),
+            description: "Generates Prometheus metrics with configurable labels and cardinality"
+                .to_string(),
             enabled: true,
             source: true,
             sink: false,
@@ -195,7 +198,7 @@ impl Connector for PrometheusImpulseConnector {
         let event_rate = options.pull_f64("event_rate")?;
         let event_time_interval = options.pull_opt_i64("event_time_interval")?;
         let message_count = options.pull_opt_i64("message_count")?;
-        
+
         let metric_name = options
             .pull_opt_str("metric_name")?
             .map(|s| s.to_string())
@@ -251,10 +254,7 @@ impl Connector for PrometheusImpulseConnector {
     ) -> anyhow::Result<Connection> {
         let description = format!(
             "PrometheusImpulse<{} eps, {} {}, {} labels>",
-            table.event_rate,
-            table.metric_name,
-            table.metric_type,
-            table.num_labels
+            table.event_rate, table.metric_name, table.metric_type, table.num_labels
         );
 
         let config = OperatorConfig {
@@ -284,10 +284,8 @@ impl Connector for PrometheusImpulseConnector {
         table: Self::TableT,
         _: OperatorConfig,
     ) -> anyhow::Result<ConstructedOperator> {
-        let label_combinations = compute_label_combinations(
-            table.num_labels as usize,
-            &table.cardinality_per_label,
-        );
+        let label_combinations =
+            compute_label_combinations(table.num_labels as usize, &table.cardinality_per_label);
 
         let prometheus_spec = PrometheusSpec {
             metric_name: Arc::from(table.metric_name.as_str()),
