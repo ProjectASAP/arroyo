@@ -52,8 +52,6 @@ impl PrometheusRemoteWriteOptimizedConnector {
     }
 
     fn get_metric_filter(config: &PrometheusRemoteWriteOptimizedTable) -> HashSet<String> {
-        use std::collections::HashSet;
-
         config.metrics.iter().map(|m| m.name.clone()).collect()
     }
 
