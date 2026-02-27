@@ -1,0 +1,56 @@
+name: Arroyo WebUI CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'webui/**'
+      - 'crates/arroyo-openapi/**'
+      - '.github/workflows/arroyo-webui.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'webui/**'
+      - 'crates/arroyo-openapi/**'
+      - '.github/workflows/arroyo-webui.yml'
+  workflow_dispatch:
+
+
+jobs:
+  lint-console:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.6
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Run prettier
+        run: |
+          cd webui
+          pnpm check
+
+  build-console:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.6
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
+
+      - name: Build console
+        run: |
+          cd webui
+          pnpm build

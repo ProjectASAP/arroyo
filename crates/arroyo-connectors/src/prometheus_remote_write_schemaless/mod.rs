@@ -1,17 +1,17 @@
 mod operator;
 
+use crate::{source_field, EmptyConfig};
 use anyhow::anyhow;
 use arroyo_operator::connector::{Connection, Connector};
 use arroyo_operator::operator::ConstructedOperator;
 use arroyo_rpc::api_types::connections::{
-    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive,
-    PrimitiveType, TestSourceMessage,
+    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive, PrimitiveType,
+    TestSourceMessage,
 };
 use arroyo_rpc::{ConnectorOptions, OperatorConfig};
+use operator::PrometheusRemoteWriteSchemalessSourceFunc;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
-use crate::{source_field, EmptyConfig};
-use operator::PrometheusRemoteWriteSchemalessSourceFunc;
 
 const TABLE_SCHEMA: &str = include_str!("./table.json");
 const ICON: &str = include_str!("./prometheus_remote_write.svg");
@@ -58,7 +58,8 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
             id: "prometheus_remote_write_schemaless".to_string(),
             name: "Prometheus Remote Write (Schemaless)".to_string(),
             icon: ICON.to_string(),
-            description: "Receive metrics from Prometheus remote_write protocol (schemaless)".to_string(),
+            description: "Receive metrics from Prometheus remote_write protocol (schemaless)"
+                .to_string(),
             enabled: true,
             source: true,
             sink: false,
@@ -106,7 +107,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -122,9 +123,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
     ) -> anyhow::Result<Connection> {
         let base_port = options.pull_opt_i64("base_port")?.map(|p| p as u16);
         let path = options.pull_opt_str("path")?.map(|s| s.to_string());
-        let bind_address = options
-            .pull_opt_str("bind_address")?
-            .map(|s| s.to_string());
+        let bind_address = options.pull_opt_str("bind_address")?.map(|s| s.to_string());
 
         let table = PrometheusRemoteWriteSchemalessTable {
             base_port,
@@ -147,10 +146,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
         let path = table.path.as_deref().unwrap_or("/receive");
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
-        let description = format!(
-            "PrometheusRemoteWriteSchemaless<{}:{}{}>",
-            bind_address, port, path
-        );
+        let description = format!("PrometheusRemoteWriteSchemaless<{bind_address}:{port}{path}>");
 
         let config = OperatorConfig {
             connection: serde_json::to_value(config).unwrap(),
@@ -181,9 +177,7 @@ impl Connector for PrometheusRemoteWriteSchemalessConnector {
     ) -> anyhow::Result<ConstructedOperator> {
         let port = table.base_port.unwrap_or(9090);
         let path = table.path.unwrap_or_else(|| "/receive".to_string());
-        let bind_address = table
-            .bind_address
-            .unwrap_or_else(|| "0.0.0.0".to_string());
+        let bind_address = table.bind_address.unwrap_or_else(|| "0.0.0.0".to_string());
 
         Ok(ConstructedOperator::from_source(Box::new(
             PrometheusRemoteWriteSchemalessSourceFunc::new(bind_address, port, path),
@@ -197,7 +191,7 @@ impl PrometheusRemoteWriteSchemalessConnector {
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
         // Test if we can bind to the address and port
-        let addr = format!("{}:{}", bind_address, port);
+        let addr = format!("{bind_address}:{port}");
         tokio::net::TcpListener::bind(&addr)
             .await
             .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;

@@ -1,19 +1,19 @@
 mod operator;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
+use crate::{source_field, EmptyConfig};
 use anyhow::anyhow;
 use arroyo_operator::connector::{Connection, Connector};
 use arroyo_operator::operator::ConstructedOperator;
 use arroyo_rpc::api_types::connections::{
-    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive,
-    PrimitiveType, TestSourceMessage,
+    ConnectionProfile, ConnectionSchema, ConnectionType, FieldType::Primitive, PrimitiveType,
+    TestSourceMessage,
 };
 use arroyo_rpc::{ConnectorOptions, OperatorConfig};
+use operator::PrometheusRemoteWriteOptimizedSourceFunc;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
-use crate::{source_field, EmptyConfig};
-use operator::PrometheusRemoteWriteOptimizedSourceFunc;
 
 const TABLE_SCHEMA: &str = include_str!("./table.json");
 const ICON: &str = include_str!("./prometheus_remote_write.svg");
@@ -51,24 +51,8 @@ impl PrometheusRemoteWriteOptimizedConnector {
         all_labels.into_iter().collect()
     }
 
-    fn get_metric_filter(
-        config: &PrometheusRemoteWriteOptimizedTable,
-    ) -> HashSet<String> {
-        use std::collections::HashSet;
-
+    fn get_metric_filter(config: &PrometheusRemoteWriteOptimizedTable) -> HashSet<String> {
         config.metrics.iter().map(|m| m.name.clone()).collect()
-    }
-
-    fn get_metric_label_map(
-        config: &PrometheusRemoteWriteOptimizedTable,
-    ) -> HashMap<String, Vec<String>> {
-        use std::collections::HashMap;
-
-        config
-            .metrics
-            .iter()
-            .map(|m| (m.name.clone(), m.labels.clone()))
-            .collect()
     }
 
     fn prometheus_schema(label_names: &[String]) -> ConnectionSchema {
@@ -182,7 +166,7 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -286,13 +270,10 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
     ) -> anyhow::Result<ConstructedOperator> {
         let all_labels = Self::collect_all_labels(&table);
         let metric_filter = Self::get_metric_filter(&table);
-        let metric_label_map = Self::get_metric_label_map(&table);
 
         let port = table.base_port.unwrap_or(9090);
         let path = table.path.unwrap_or_else(|| "/receive".to_string());
-        let bind_address = table
-            .bind_address
-            .unwrap_or_else(|| "0.0.0.0".to_string());
+        let bind_address = table.bind_address.unwrap_or_else(|| "0.0.0.0".to_string());
 
         Ok(ConstructedOperator::from_source(Box::new(
             PrometheusRemoteWriteOptimizedSourceFunc::new(
@@ -301,21 +282,18 @@ impl Connector for PrometheusRemoteWriteOptimizedConnector {
                 path,
                 all_labels,
                 metric_filter,
-                metric_label_map,
             ),
         )))
     }
 }
 
 impl PrometheusRemoteWriteOptimizedConnector {
-    async fn test_connection(
-        table: &PrometheusRemoteWriteOptimizedTable,
-    ) -> anyhow::Result<()> {
+    async fn test_connection(table: &PrometheusRemoteWriteOptimizedTable) -> anyhow::Result<()> {
         let port = table.base_port.unwrap_or(9090);
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
         // Test if we can bind to the address and port
-        let addr = format!("{}:{}", bind_address, port);
+        let addr = format!("{bind_address}:{port}");
         tokio::net::TcpListener::bind(&addr)
             .await
             .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;

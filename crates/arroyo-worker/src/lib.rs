@@ -299,7 +299,7 @@ impl WorkerServer {
             }))
             .await
             .unwrap();
-            
+
         info!(
             "WORKER_REGISTERED: worker_id={}, machine_id={}, slots={}",
             id.0,

@@ -40,7 +40,8 @@ impl Connector for PrometheusRemoteWriteWithSchemaConnector {
             id: "prometheus_remote_write_with_schema".to_string(),
             name: "Prometheus Remote Write (With Schema)".to_string(),
             icon: ICON.to_string(),
-            description: "Receive metrics from Prometheus remote_write protocol (with schema)".to_string(),
+            description: "Receive metrics from Prometheus remote_write protocol (with schema)"
+                .to_string(),
             enabled: true,
             source: true,
             sink: false,
@@ -90,7 +91,7 @@ impl Connector for PrometheusRemoteWriteWithSchemaConnector {
                 Err(err) => TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("Failed to validate connection: {}", err),
+                    message: format!("Failed to validate connection: {err}"),
                 },
             };
             tx.send(message).await.unwrap();
@@ -143,10 +144,10 @@ impl Connector for PrometheusRemoteWriteWithSchemaConnector {
         let bind_address = table.bind_address.as_deref().unwrap_or("0.0.0.0");
 
         let description = format!(
-            "PrometheusRemoteWriteWithSchema<{}:{}-{}{}>", 
-            bind_address, 
-            base_port, 
-            base_port + parallelism as u16 - 1, 
+            "PrometheusRemoteWriteWithSchema<{}:{}-{}{}>",
+            bind_address,
+            base_port,
+            base_port + parallelism as u16 - 1,
             path
         );
 
@@ -207,7 +208,7 @@ impl PrometheusRemoteWriteWithSchemaConnector {
         // Test if we can bind to all ports in the range
         for i in 0..parallelism {
             let port = base_port + i as u16;
-            let addr = format!("{}:{}", bind_address, port);
+            let addr = format!("{bind_address}:{port}");
             tokio::net::TcpListener::bind(&addr)
                 .await
                 .map_err(|e| anyhow!("Cannot bind to {}: {}", addr, e))?;

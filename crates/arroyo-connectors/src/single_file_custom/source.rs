@@ -41,6 +41,7 @@ pub struct SingleFileCustomSourceFunc {
 }
 
 impl SingleFileCustomSourceFunc {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         path: String,
         file_format: FileFormat,
@@ -70,7 +71,7 @@ impl SingleFileCustomSourceFunc {
                 let millis: i64 = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as unix_millis: {}", value, e),
+                        format!("Failed to parse '{value}' as unix_millis: {e}"),
                     )
                 })?;
                 Ok(UNIX_EPOCH + Duration::from_millis(millis as u64))
@@ -79,7 +80,7 @@ impl SingleFileCustomSourceFunc {
                 let secs: i64 = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as unix_seconds: {}", value, e),
+                        format!("Failed to parse '{value}' as unix_seconds: {e}"),
                     )
                 })?;
                 Ok(UNIX_EPOCH + Duration::from_secs(secs as u64))
@@ -88,7 +89,7 @@ impl SingleFileCustomSourceFunc {
                 let dt: DateTime<Utc> = value.trim().parse().map_err(|e| {
                     UserError::new(
                         "invalid timestamp",
-                        format!("Failed to parse '{}' as RFC3339: {}", value, e),
+                        format!("Failed to parse '{value}' as RFC3339: {e}"),
                     )
                 })?;
                 Ok(dt.into())
@@ -124,18 +125,14 @@ impl SingleFileCustomSourceFunc {
     async fn get_line_stream(
         &self,
     ) -> Result<Box<dyn Stream<Item = Result<String, UserError>> + Unpin + Send>, UserError> {
-        let file = File::open(&self.path).await.map_err(|e| {
-            UserError::new("failed to open file", format!("{}: {}", self.path, e))
-        })?;
+        let file = File::open(&self.path)
+            .await
+            .map_err(|e| UserError::new("failed to open file", format!("{}: {e}", self.path)))?;
 
         let compression_reader: Box<dyn AsyncRead + Unpin + Send> = match self.compression {
             Compression::None => Box::new(BufReader::new(file)),
-            Compression::Gzip => {
-                Box::new(GzipDecoder::new(BufReader::new(file)))
-            }
-            Compression::Zstd => {
-                Box::new(ZstdDecoder::new(BufReader::new(file)))
-            }
+            Compression::Gzip => Box::new(GzipDecoder::new(BufReader::new(file))),
+            Compression::Zstd => Box::new(ZstdDecoder::new(BufReader::new(file))),
         };
 
         let lines = LinesStream::new(BufReader::new(compression_reader).lines());
@@ -161,7 +158,7 @@ impl SingleFileCustomSourceFunc {
                             }
 
                             let json: Value = serde_json::from_str(&line).map_err(|e| {
-                                UserError::new("invalid JSON", format!("Line: '{}', Error: {}", line, e))
+                                UserError::new("invalid JSON", format!("Line: '{line}', Error: {e}"))
                             })?;
 
                             let event_time = self.extract_timestamp_from_json(&json)?;
@@ -198,13 +195,14 @@ impl SingleFileCustomSourceFunc {
         ctx: &mut SourceContext,
         collector: &mut SourceCollector,
     ) -> Result<SourceFinishType, UserError> {
-        let file = tokio::fs::File::open(&self.path).await.map_err(|e| {
-            UserError::new("failed to open file", format!("{}: {}", self.path, e))
-        })?;
+        let file = tokio::fs::File::open(&self.path)
+            .await
+            .map_err(|e| UserError::new("failed to open file", format!("{}: {e}", self.path)))?;
 
-        let file_meta = file.metadata().await.map_err(|e| {
-            UserError::new("failed to get file metadata", e.to_string())
-        })?;
+        let file_meta = file
+            .metadata()
+            .await
+            .map_err(|e| UserError::new("failed to get file metadata", e.to_string()))?;
 
         let file_size = file_meta.len();
 
@@ -214,7 +212,11 @@ impl SingleFileCustomSourceFunc {
         // Create object meta for the parquet reader
         let object_meta = object_store::ObjectMeta {
             location: object_store::path::Path::from(self.path.as_str()),
-            last_modified: file_meta.modified().ok().map(|t| t.into()).unwrap_or_else(chrono::Utc::now),
+            last_modified: file_meta
+                .modified()
+                .ok()
+                .map(|t| t.into())
+                .unwrap_or_else(chrono::Utc::now),
             size: file_size as usize,
             e_tag: None,
             version: None,
@@ -224,31 +226,30 @@ impl SingleFileCustomSourceFunc {
 
         let builder = ParquetRecordBatchStreamBuilder::new(reader)
             .await
-            .map_err(|e| {
-                UserError::new("failed to create parquet reader", e.to_string())
-            })?
+            .map_err(|e| UserError::new("failed to create parquet reader", e.to_string()))?
             .with_batch_size(8192);
 
         // Get the timestamp column index
         let parquet_schema = builder.schema();
-        let ts_idx = parquet_schema
-            .fields()
-            .iter()
-            .position(|f| f.name() == &self.timestamp_field)
-            .ok_or_else(|| {
-                UserError::new(
-                    "missing timestamp field",
-                    format!(
+        let ts_idx =
+            parquet_schema
+                .fields()
+                .iter()
+                .position(|f| f.name() == &self.timestamp_field)
+                .ok_or_else(|| {
+                    UserError::new(
+                        "missing timestamp field",
+                        format!(
                         "Timestamp field '{}' not found in parquet schema. Available fields: {:?}",
                         self.timestamp_field,
                         parquet_schema.fields().iter().map(|f| f.name()).collect::<Vec<_>>()
                     ),
-                )
-            })?;
+                    )
+                })?;
 
-        let mut stream = builder.build().map_err(|e| {
-            UserError::new("failed to build parquet stream", e.to_string())
-        })?;
+        let mut stream = builder
+            .build()
+            .map_err(|e| UserError::new("failed to build parquet stream", e.to_string()))?;
 
         loop {
             select! {
@@ -300,39 +301,53 @@ impl SingleFileCustomSourceFunc {
         for i in 0..batch.num_rows() {
             let ts_nanos: i64 = match &data_type {
                 // Arrow Timestamp types - use the type's semantics directly
-                DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-                    ts_array.as_primitive::<arrow::datatypes::TimestampNanosecondType>().value(i)
-                }
+                DataType::Timestamp(TimeUnit::Nanosecond, _) => ts_array
+                    .as_primitive::<arrow::datatypes::TimestampNanosecondType>()
+                    .value(i),
                 DataType::Timestamp(TimeUnit::Microsecond, _) => {
-                    ts_array.as_primitive::<arrow::datatypes::TimestampMicrosecondType>().value(i) * 1_000
+                    ts_array
+                        .as_primitive::<arrow::datatypes::TimestampMicrosecondType>()
+                        .value(i)
+                        * 1_000
                 }
                 DataType::Timestamp(TimeUnit::Millisecond, _) => {
-                    ts_array.as_primitive::<arrow::datatypes::TimestampMillisecondType>().value(i) * 1_000_000
+                    ts_array
+                        .as_primitive::<arrow::datatypes::TimestampMillisecondType>()
+                        .value(i)
+                        * 1_000_000
                 }
                 DataType::Timestamp(TimeUnit::Second, _) => {
-                    ts_array.as_primitive::<arrow::datatypes::TimestampSecondType>().value(i) * 1_000_000_000
+                    ts_array
+                        .as_primitive::<arrow::datatypes::TimestampSecondType>()
+                        .value(i)
+                        * 1_000_000_000
                 }
 
                 // Integer types - interpret based on ts_format
                 DataType::Int64 => {
-                    let value = ts_array.as_primitive::<arrow::datatypes::Int64Type>().value(i);
+                    let value = ts_array
+                        .as_primitive::<arrow::datatypes::Int64Type>()
+                        .value(i);
                     match self.ts_format {
                         TsFormat::UnixMillis => value * 1_000_000,
                         TsFormat::UnixSeconds => value * 1_000_000_000,
-                        TsFormat::Rfc3339 => return Err(UserError::new(
-                            "invalid ts_format",
-                            "ts_format 'rfc3339' cannot be used with integer columns",
-                        )),
+                        TsFormat::Rfc3339 => {
+                            return Err(UserError::new(
+                                "invalid ts_format",
+                                "ts_format 'rfc3339' cannot be used with integer columns",
+                            ))
+                        }
                     }
                 }
 
-                _ => return Err(UserError::new(
-                    "unsupported timestamp type",
-                    format!(
-                        "Timestamp field has type {:?}. Supported: Int64, Timestamp types",
-                        data_type
+                _ => {
+                    return Err(UserError::new(
+                        "unsupported timestamp type",
+                        format!(
+                        "Timestamp field has type {data_type:?}. Supported: Int64, Timestamp types"
                     ),
-                )),
+                    ))
+                }
             };
             timestamps.push(ts_nanos);
         }
@@ -341,7 +356,8 @@ impl SingleFileCustomSourceFunc {
         let timestamp_array = arrow::array::TimestampNanosecondArray::from(timestamps);
 
         // Build output schema from batch schema + _timestamp column
-        let mut fields: Vec<arrow::datatypes::FieldRef> = batch.schema().fields().iter().cloned().collect();
+        let mut fields: Vec<arrow::datatypes::FieldRef> =
+            batch.schema().fields().iter().cloned().collect();
         fields.push(Arc::new(arrow::datatypes::Field::new(
             "_timestamp",
             arrow::datatypes::DataType::Timestamp(arrow::datatypes::TimeUnit::Nanosecond, None),
@@ -356,7 +372,7 @@ impl SingleFileCustomSourceFunc {
         RecordBatch::try_new(output_schema, columns).map_err(|e| {
             UserError::new(
                 "failed to create output batch",
-                format!("Schema mismatch: {}", e),
+                format!("Schema mismatch: {e}"),
             )
         })
     }

@@ -5,7 +5,9 @@ use arroyo_operator::connector::Connection;
 use arroyo_rpc::api_types::connections::{
     ConnectionProfile, ConnectionSchema, ConnectionType, TestSourceMessage,
 };
-use arroyo_rpc::formats::{BadData, Format, Framing, FramingMethod, JsonFormat, NewlineDelimitedFraming};
+use arroyo_rpc::formats::{
+    BadData, Format, Framing, FramingMethod, JsonFormat, NewlineDelimitedFraming,
+};
 use arroyo_rpc::{ConnectorOptions, OperatorConfig};
 use serde::{Deserialize, Serialize};
 
@@ -66,19 +68,22 @@ impl Connector for SingleFileCustomConnector {
                 let message = TestSourceMessage {
                     error: true,
                     done: true,
-                    message: format!("File not found: {}", path),
+                    message: format!("File not found: {path}"),
                 };
                 let _ = tx.send(message).await;
                 return;
             }
 
             if let Some(schema) = &schema {
-                let field_exists = schema.fields.iter().any(|f| f.field_name == timestamp_field);
+                let field_exists = schema
+                    .fields
+                    .iter()
+                    .any(|f| f.field_name == timestamp_field);
                 if !field_exists {
                     let message = TestSourceMessage {
                         error: true,
                         done: true,
-                        message: format!("Timestamp field '{}' not found in schema", timestamp_field),
+                        message: format!("Timestamp field '{timestamp_field}' not found in schema"),
                     };
                     let _ = tx.send(message).await;
                     return;
@@ -110,11 +115,20 @@ impl Connector for SingleFileCustomConnector {
             .map(|s| s.to_owned())
             .ok_or_else(|| anyhow!("no schema defined for Single File Custom connection"))?;
 
-        let field_exists = schema.fields.iter().any(|f| f.field_name == table.timestamp_field);
+        let field_exists = schema
+            .fields
+            .iter()
+            .any(|f| f.field_name == table.timestamp_field);
         if !field_exists {
-            bail!("Timestamp field '{}' not found in schema. Available fields: {:?}",
+            bail!(
+                "Timestamp field '{}' not found in schema. Available fields: {:?}",
                 table.timestamp_field,
-                schema.fields.iter().map(|f| &f.field_name).collect::<Vec<_>>());
+                schema
+                    .fields
+                    .iter()
+                    .map(|f| &f.field_name)
+                    .collect::<Vec<_>>()
+            );
         }
 
         let format = match table.file_format {
@@ -125,11 +139,11 @@ impl Connector for SingleFileCustomConnector {
         };
 
         let framing = match table.file_format {
-            FileFormat::Json => {
-                Some(Framing {
-                    method: FramingMethod::Newline(NewlineDelimitedFraming { max_line_length: None }),
-                })
-            }
+            FileFormat::Json => Some(Framing {
+                method: FramingMethod::Newline(NewlineDelimitedFraming {
+                    max_line_length: None,
+                }),
+            }),
             FileFormat::Parquet => None,
         };
 
@@ -171,14 +185,20 @@ impl Connector for SingleFileCustomConnector {
         let file_format = match format_str.as_str() {
             "json" => FileFormat::Json,
             "parquet" => FileFormat::Parquet,
-            _ => bail!("Invalid file_format '{}'. Expected 'json' or 'parquet'", format_str),
+            _ => bail!(
+                "Invalid file_format '{}'. Expected 'json' or 'parquet'",
+                format_str
+            ),
         };
 
         let compression = match options.pull_opt_str("compression")?.as_deref() {
             Some("none") | None => Some(Compression::None),
             Some("gzip") => Some(Compression::Gzip),
             Some("zstd") => Some(Compression::Zstd),
-            Some(other) => bail!("Invalid compression '{}'. Expected 'none', 'gzip', or 'zstd'", other),
+            Some(other) => bail!(
+                "Invalid compression '{}'. Expected 'none', 'gzip', or 'zstd'",
+                other
+            ),
         };
 
         let timestamp_field = options.pull_str("timestamp_field")?;
@@ -187,13 +207,19 @@ impl Connector for SingleFileCustomConnector {
             Some("unix_millis") | None => Some(TsFormat::UnixMillis),
             Some("unix_seconds") => Some(TsFormat::UnixSeconds),
             Some("rfc3339") => Some(TsFormat::Rfc3339),
-            Some(other) => bail!("Invalid ts_format '{}'. Expected 'unix_millis', 'unix_seconds', or 'rfc3339'", other),
+            Some(other) => bail!(
+                "Invalid ts_format '{}'. Expected 'unix_millis', 'unix_seconds', or 'rfc3339'",
+                other
+            ),
         };
 
         let bad_data_mode = match options.pull_opt_str("bad_data_mode")?.as_deref() {
             Some("skip") => Some(BadDataMode::Skip),
             Some("fail") | None => Some(BadDataMode::Fail),
-            Some(other) => bail!("Invalid bad_data_mode '{}'. Expected 'skip' or 'fail'", other),
+            Some(other) => bail!(
+                "Invalid bad_data_mode '{}'. Expected 'skip' or 'fail'",
+                other
+            ),
         };
 
         self.from_config(

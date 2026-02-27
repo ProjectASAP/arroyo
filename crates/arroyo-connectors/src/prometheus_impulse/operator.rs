@@ -3,19 +3,19 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use arrow::array::builder::{StringBuilder, Float64Builder, TimestampNanosecondBuilder};
+use arrow::array::builder::{Float64Builder, StringBuilder, TimestampNanosecondBuilder};
 use arrow::array::RecordBatch;
 use arroyo_rpc::grpc::rpc::{StopMode, TableConfig};
 use arroyo_rpc::ControlMessage;
 use async_trait::async_trait;
 use bincode::{Decode, Encode};
-use rand::{SeedableRng, Rng};
 use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
 use arroyo_operator::context::{SourceCollector, SourceContext};
 use arroyo_operator::operator::SourceOperator;
 use arroyo_operator::SourceFinishType;
-use arroyo_types::{to_nanos};
+use arroyo_types::to_nanos;
 use tracing::{debug, info};
 
 const RNG_SEED: u64 = 0;
@@ -134,8 +134,7 @@ impl PrometheusImpulseSourceFunc {
         let delay = self.delay(ctx);
         info!(
             "Starting prometheus impulse source with delay {:?} and limit {}",
-            delay,
-            self.limit
+            delay, self.limit
         );
 
         if let Some(state) = ctx
@@ -156,8 +155,10 @@ impl PrometheusImpulseSourceFunc {
         let mut items = 0;
         let metric_name = self.prometheus_spec.metric_name.clone();
         let metric_type = self.prometheus_spec.metric_type.clone();
-        let mut metric_name_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_name.len());
-        let mut metric_type_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_type.len());
+        let mut metric_name_builder =
+            StringBuilder::with_capacity(batch_size, batch_size * metric_name.len());
+        let mut metric_type_builder =
+            StringBuilder::with_capacity(batch_size, batch_size * metric_type.len());
         let mut value_builder = Float64Builder::with_capacity(batch_size);
         let mut labels_builder = StringBuilder::with_capacity(batch_size, batch_size * 100);
         let mut timestamp_builder = TimestampNanosecondBuilder::with_capacity(batch_size);
@@ -189,13 +190,16 @@ impl PrometheusImpulseSourceFunc {
                         Arc::new(labels_builder.finish()),
                         Arc::new(timestamp_builder.finish()),
                     ],
-                ).unwrap();
+                )
+                .unwrap();
 
                 collector.collect(batch).await;
                 items = 0;
                 // Rebuild builders for next batch
-                metric_name_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_name.len());
-                metric_type_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_type.len());
+                metric_name_builder =
+                    StringBuilder::with_capacity(batch_size, batch_size * metric_name.len());
+                metric_type_builder =
+                    StringBuilder::with_capacity(batch_size, batch_size * metric_type.len());
                 value_builder = Float64Builder::with_capacity(batch_size);
                 labels_builder = StringBuilder::with_capacity(batch_size, batch_size * 100);
                 timestamp_builder = TimestampNanosecondBuilder::with_capacity(batch_size);
@@ -217,12 +221,19 @@ impl PrometheusImpulseSourceFunc {
                                 Arc::new(labels_builder.finish()),
                                 Arc::new(timestamp_builder.finish()),
                             ],
-                        ).unwrap();
+                        )
+                        .unwrap();
                         collector.collect(batch).await;
                         items = 0;
                         // Rebuild builders for next batch
-                        metric_name_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_name.len());
-                        metric_type_builder = StringBuilder::with_capacity(batch_size, batch_size * metric_type.len());
+                        metric_name_builder = StringBuilder::with_capacity(
+                            batch_size,
+                            batch_size * metric_name.len(),
+                        );
+                        metric_type_builder = StringBuilder::with_capacity(
+                            batch_size,
+                            batch_size * metric_type.len(),
+                        );
                         value_builder = Float64Builder::with_capacity(batch_size);
                         labels_builder = StringBuilder::with_capacity(batch_size, batch_size * 100);
                         timestamp_builder = TimestampNanosecondBuilder::with_capacity(batch_size);
@@ -274,7 +285,8 @@ impl PrometheusImpulseSourceFunc {
                     Arc::new(labels_builder.finish()),
                     Arc::new(timestamp_builder.finish()),
                 ],
-            ).unwrap();
+            )
+            .unwrap();
             collector.collect(batch).await;
         }
 
@@ -293,7 +305,10 @@ impl SourceOperator for PrometheusImpulseSourceFunc {
     }
 
     async fn on_start(&mut self, ctx: &mut SourceContext) {
-        let s: &mut arroyo_state::tables::global_keyed_map::GlobalKeyedView<u32, PrometheusImpulseSourceState> = ctx
+        let s: &mut arroyo_state::tables::global_keyed_map::GlobalKeyedView<
+            u32,
+            PrometheusImpulseSourceState,
+        > = ctx
             .table_manager
             .get_global_keyed_state("p")
             .await
