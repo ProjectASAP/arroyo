@@ -127,7 +127,7 @@ impl SingleFileCustomSourceFunc {
     ) -> Result<Box<dyn Stream<Item = Result<String, UserError>> + Unpin + Send>, UserError> {
         let file = File::open(&self.path)
             .await
-            .map_err(|e| UserError::new("failed to open file", format!("{}: {}", self.path, e)))?;
+            .map_err(|e| UserError::new("failed to open file", format!("{}: {e}", self.path)))?;
 
         let compression_reader: Box<dyn AsyncRead + Unpin + Send> = match self.compression {
             Compression::None => Box::new(BufReader::new(file)),
@@ -158,7 +158,7 @@ impl SingleFileCustomSourceFunc {
                             }
 
                             let json: Value = serde_json::from_str(&line).map_err(|e| {
-                                UserError::new("invalid JSON", format!("Line: '{}', Error: {}", line, e))
+                                UserError::new("invalid JSON", format!("Line: '{line}', Error: {e}"))
                             })?;
 
                             let event_time = self.extract_timestamp_from_json(&json)?;
@@ -197,7 +197,7 @@ impl SingleFileCustomSourceFunc {
     ) -> Result<SourceFinishType, UserError> {
         let file = tokio::fs::File::open(&self.path)
             .await
-            .map_err(|e| UserError::new("failed to open file", format!("{}: {}", self.path, e)))?;
+            .map_err(|e| UserError::new("failed to open file", format!("{}: {e}", self.path)))?;
 
         let file_meta = file
             .metadata()
